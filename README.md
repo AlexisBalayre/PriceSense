@@ -25,6 +25,7 @@ curl -O https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.26
 docker ps
 localstack status services
 ```
+
 Here is the expected output:
 
 ```shell
@@ -72,4 +73,4 @@ d71ae92cc74f   localstack/localstack:latest                          "docker-ent
 └──────────────────────────┴─────────────┘
 ```
 
-
+7. Create an S3 bucket using the following command: `aws --endpoint-url=http://localhost:4566 s3 mb s3://big-data-project`
