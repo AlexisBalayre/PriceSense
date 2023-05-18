@@ -56,7 +56,7 @@ def news_formatter(key):
         # Convert the time_published field to a proper timestamp
         df = df.withColumn(
             "time_published",
-            F.to_timestamp(F.col("time_published"), "yyyyMMdd'T'HHmmss"),
+            F.from_utc_timestamp(F.col("time_published"), "UTC")
         )
 
         # Show the DataFrame
@@ -95,7 +95,7 @@ def prices_formatter(key):
         # Expand the "values" column into separate columns
         df = df.select(
             F.col("symbol"),
-            F.to_date(F.col("date"), "yyyy-MM-dd").alias("date"),
+            F.from_utc_timestamp(F.col("date"), "UTC").alias("date"),
             df["values"]["1. open"].cast("double").alias("open"),
             df["values"]["2. high"].cast("double").alias("high"),
             df["values"]["3. low"].cast("double").alias("low"),

@@ -73,9 +73,7 @@ def predict_close_price(key, df):
         )
 
         # Décalage temporel de 1 jour
-        prediction = prediction.withColumn(
-            "date", F.date_add(F.col("date"), 1)
-        )
+        prediction = prediction.withColumn("date", F.date_add(F.col("date"), 1))
 
         # Add the predicted close price to the DataFrame
         df = df.join(prediction.select("date", "prediction"), on="date", how="right")
@@ -93,12 +91,15 @@ def combine_news_prices(news_key, prices_key):
         prices_df = spark.read.parquet(
             f"s3a://big-data-project-formatting/{prices_key}"
         )
+        prices_df = prices_df.withColumn("date", F.to_date(F.col("date"), "yyyy-MM-dd"))
 
         # Predict the close price
         prices_df = predict_close_price(prices_key, prices_df)
 
         # Convert the time_published column to date in news_df
-        news_df = news_df.withColumn("date", F.to_date(F.col("time_published")))
+        news_df = news_df.withColumn(
+            "date", F.to_date(F.col("time_published"), "yyyy-MM-dd")
+        )
 
         # Group the news data and calculate the required columns
         news_df = (
@@ -115,15 +116,15 @@ def combine_news_prices(news_key, prices_key):
             )
             .withColumn(
                 "ticker_sentiment_score_mean_label",
-                F.when(F.col("ticker_sentiment_score_mean") > 0, "Bullish").otherwise(
-                    "Bearish"
-                ),
+                F.when(F.col("ticker_sentiment_score_mean") >= 0.35, "Bullish")
+                .when(F.col("ticker_sentiment_score_mean") <= -0.35, "Bearish")
+                .otherwise("Neutral"),
             )
             .withColumn(
                 "overall_sentiment_score_mean_label",
-                F.when(F.col("overall_sentiment_score_mean") > 0, "Bullish").otherwise(
-                    "Bearish"
-                ),
+                F.when(F.col("overall_sentiment_score_mean") >= 0.35, "Bullish")
+                .when(F.col("overall_sentiment_score_mean") <= -0.35, "Bearish")
+                .otherwise("Neutral"),
             )
         )
 
@@ -154,19 +155,23 @@ def combine_news_prices(news_key, prices_key):
         # Update the symbol column
         combined_df = combined_df.withColumn("symbol", F.lit(symbol))
 
-        # Convert the date to the current date with the correct format(yyyy-MM-dd hh:mm:ss)    
+        # Convert the date to the current date with the correct format UTC
         combined_df = combined_df.withColumn(
-            "date", F.lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            "timestamp", F.from_utc_timestamp(F.current_timestamp(), "UTC")
         )
 
         # Fetch the current price
         session = Session()
-        session.headers.update({'User-Agent': 'Mozilla/5.0'})
-        response = session.get(f'https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?region=FR&lang=fr-FR&includePrePost=false&interval=5m&useYfid=true&range=1d&corsDomain=fr.finance.yahoo.com&.tsrc=finance')
-        current_price = json.loads(response.text)["chart"]["result"][0]["meta"]["regularMarketPrice"]
+        session.headers.update({"User-Agent": "Mozilla/5.0"})
+        response = session.get(
+            f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?region=FR&lang=fr-FR&includePrePost=false&interval=5m&useYfid=true&range=1d&corsDomain=fr.finance.yahoo.com&.tsrc=finance"
+        )
+        current_price = json.loads(response.text)["chart"]["result"][0]["meta"][
+            "regularMarketPrice"
+        ]
 
         # Add the current price to the DataFrame
-        combined_df = combined_df.withColumn("current_price", F.lit(current_price)) 
+        combined_df = combined_df.withColumn("current_price", F.lit(current_price))
 
         combined_df.show()
 

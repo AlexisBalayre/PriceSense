@@ -1,0 +1,11 @@
+README.md
+setup.py
+bigdataprojectlib/__init__.py
+bigdataprojectlib/combination.py
+bigdataprojectlib/formatting.py
+bigdataprojectlib/indexing.py
+bigdataprojectlib/ingestion.py
+bigdataprojectlib.egg-info/PKG-INFO
+bigdataprojectlib.egg-info/SOURCES.txt
+bigdataprojectlib.egg-info/dependency_links.txt
+bigdataprojectlib.egg-info/top_level.txt
