@@ -2,3 +2,8 @@
 volume 
 .DS_Store
 .env
+__pycache__
+dist
+*.egg-info
+build
+.vscode
