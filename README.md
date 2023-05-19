@@ -9,7 +9,10 @@ This project aims to fetch stock market data, transform it using PySpark, and sa
 1. Clone the repository to your local machine.
 2. Create a virtual environment and activate it: `python3 -m venv venv && source venv/bin/activate`
 3. Install the required packages using the following command: `pip install -r requirements.txt`
-4. Download the AWS JARs into PySpark's JAR directory:
+4. Build the Python package using the following command: `python setup.py bdist_wheel`
+5. Your wheel file is stored in the “dist” folder that is now created. You can install your library by using: 
+    `pip install /path/to/wheelfile.whl`
+6. Download the AWS JARs into PySpark's JAR directory:
 
     ```shell
     cd .venv/Lib/site-packages/pyspark/jars || .venv/lib/python3.11/site-packages/pyspark/jars
@@ -18,8 +21,8 @@ This project aims to fetch stock market data, transform it using PySpark, and sa
     curl -O https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar
     ```
 
-5. Start the docker containers using the following command: `docker-compose up -d`
-6. Verify that the containers are running using the following command:
+7. Start the docker containers using the following command: `docker-compose up -d`
+8. Verify that the containers are running using the following command:
 
     ```shell
     docker ps
@@ -73,7 +76,7 @@ This project aims to fetch stock market data, transform it using PySpark, and sa
     └──────────────────────────┴─────────────┘
     ```
 
-7. Create the S3 buckets using the following commands:
+9. Create the S3 buckets using the following commands:
 
     ```shell
     aws --endpoint-url=http://localhost:4566 s3 mb s3://big-data-project-ingestion
