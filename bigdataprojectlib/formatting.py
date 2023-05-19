@@ -2,6 +2,7 @@
 # The second step of the pipeline
 
 # Importing necessary libraries
+import datetime
 import findspark
 
 findspark.init()  # Initializing Spark
@@ -68,9 +69,11 @@ def format_news_data(key):
             .filter(f"ticker = '{ticker}'")
         )
 
-        # Convert "time_published" to timestamp format
+        data_frame.show()
+
+        # Convert "time_published" to UTC timestamp format
         data_frame = data_frame.withColumn(
-            "time_published", Func.from_utc_timestamp(Func.col("time_published"), "UTC")
+            "time_published", Func.from_utc_timestamp(Func.to_timestamp(Func.col("time_published"), "yyyyMMdd'T'HHmmss"), "UTC")
         )
 
         # Show DataFrame

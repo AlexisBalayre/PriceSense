@@ -8,11 +8,11 @@ from bigdataprojectlib.combination import combine_all_data
 from bigdataprojectlib.indexing import index_all_s3_data
 
 default_args = {
-    'owner': 'airflow',
+    'owner': 'Alexis BALAYRE & Augustin CREUSILLET',
     'depends_on_past': False,
     'start_date': days_ago(2),
     'email': ['alexis@balayre.com'],
-    'email_on_failure': False,
+    'email_on_failure': True,
     'email_on_retry': False,
     'retries': 1,
 }

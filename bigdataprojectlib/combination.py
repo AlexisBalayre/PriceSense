@@ -130,10 +130,14 @@ def combine_news_and_prices(news_key, prices_key):
         # Predict the close price
         prices_data_frame = predict_close_price(prices_key, prices_data_frame)
 
+        prices_data_frame.show()
+
         # Convert the time_published column to date in news_df
         news_data_frame = news_data_frame.withColumn(
             "date", Func.to_date(Func.col("time_published"), "yyyy-MM-dd")
         )
+
+        news_data_frame.show()
 
         # Group the news data and calculate the required columns
         news_data_frame = (
