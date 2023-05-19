@@ -203,7 +203,7 @@ def combine_news_and_prices(news_key, prices_key):
 
         # Convert the date to the current date with the correct format UTC
         combined_data_frame = combined_data_frame.withColumn(
-            "timestamp", Func.from_utc_timestamp(Func.current_timestamp(), "UTC")
+            "timestamp", Func.to_utc_timestamp(Func.current_timestamp(), "UTC")
         )
 
         # Fetch the current price

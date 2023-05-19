@@ -8,6 +8,7 @@ findspark.init()  # Initializing Spark
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as Func
+from confluent_kafka import Producer
 
 # Creating a SparkSession
 spark_session = (
@@ -26,26 +27,26 @@ spark_session = (
     .getOrCreate()
 )
 
+# Creating a Kafka Producer
+p = Producer({'bootstrap.servers': 'mybroker'})#
 
-def format_news_data(key):
+
+def format_news_data(ticker):
     """
-    This function takes a key of a JSON file stored in S3 bucket, loads the file into a Spark DataFrame,
-    transforms the DataFrame and finally writes it back to S3 as a Parquet file.
+    This function formats news of a specific ticker 
 
     Args:
-        key (str): The key of the file stored in S3 containing the news data.
-
-    Returns:
-        str: The key of the file stored in S3 containing the transformed news data in Parquet format.
-        Prints an error message if an exception is encountered.
+        ticker (str): The stock symbol for which to format news data.
     """
-    print(f"Formatting {key}")
+    print(f"Formatting {ticker} news data...")
     try:
         # Read JSON data into DataFrame
-        data_frame = spark_session.read.json(f"s3a://big-data-project-ingestion/{key}")
-
-        # Extract ticker from key
-        ticker = key.split("_")[0]
+        data_frame = (
+            spark_session.readStream.format("kafka")
+            .option("kafka.bootstrap.servers", "mybroker")
+            .option("subscribe", f'ingest_{ticker}_news_topic')
+            .load()
+        )
 
         # Transform DataFrame
         data_frame = (
@@ -72,26 +73,24 @@ def format_news_data(key):
 
         # Convert "time_published" to UTC timestamp format
         data_frame = data_frame.withColumn(
-            "time_published", Func.to_utc_timestamp(Func.to_timestamp(Func.col("time_published"), "yyyyMMdd'T'HHmmss"), "UTC")
+            "time_published",
+            Func.to_utc_timestamp(
+                Func.to_timestamp(Func.col("time_published"), "yyyyMMdd'T'HHmmss"),
+                "UTC",
+            ),
         )
 
         # Show DataFrame
         data_frame.show()
 
-        # Write DataFrame to Parquet format and save in S3
-        parquet_file_key = f'{key.rsplit(".", 1)[0]}.parquet'
-        data_frame.write.parquet(
-            f"s3a://big-data-project-formatting/{parquet_file_key}"
-        )
-
-        return parquet_file_key
+        # Convert DataFrame to JSON and send it to Kafka
+        p.produce("format_news_topic", data_frame.toJSON())
 
     except Exception as error:
         print("Error: ", error)
-        print("key: ", key)
 
 
-def format_prices_data(key):
+def format_prices_data(ticker):
     """
     This function takes a key of a JSON file stored in S3 bucket, loads the file into a Spark DataFrame,
     transforms the DataFrame and finally writes it back to S3 as a Parquet file.
@@ -103,10 +102,15 @@ def format_prices_data(key):
         str: The key of the file stored in S3 containing the transformed stock prices data in Parquet format.
         Prints an error message if an exception is encountered.
     """
-    print(f"Formatting {key}")
+    print(f"Formatting {ticker} stock prices data...")
     try:
         # Read JSON data into DataFrame
-        data_frame = spark_session.read.json(f"s3a://big-data-project-ingestion/{key}")
+        data_frame = (
+            spark_session.readStream.format("kafka")
+            .option("kafka.bootstrap.servers", "mybroker")
+            .option("subscribe", "ingest_stock_prices_topic")
+            .load()
+        )
 
         # Extract symbol from DataFrame
         symbol = data_frame.select(data_frame["Meta Data"]["2. Symbol"]).first()[0]
@@ -140,52 +144,34 @@ def format_prices_data(key):
         # Show DataFrame
         data_frame.show()
 
-        # Write DataFrame to Parquet format and save in S3
-        parquet_file_key = f'{key.rsplit(".", 1)[0]}.parquet'
-        data_frame.write.parquet(
-            f"s3a://big-data-project-formatting/{parquet_file_key}"
-        )
-
-        return parquet_file_key
+        # Convert DataFrame to JSON and send it to Kafka
+        p.produce("format_stock_prices_topic", data_frame.toJSON())
 
     except Exception as error:
         print("Error: ", error)
-        print("key: ", key)
 
 
-def format_all_news(keys):
+def format_all_news(tickers):
     """
     This function formats all news data using the function 'format_news_data'.
 
     Args:
-        keys (list): List of keys of the files stored in S3 containing the news data.
-
-    Returns:
-        list: List of keys of the files stored in S3 containing the transformed news data in Parquet format.
+        tickers (list): List of tickers for which to format news data.
     """
-    parquet_file_keys = []
     print("Formatting news data...")
-    for key in keys:
-        parquet_file_key = format_news_data(key)
-        parquet_file_keys.append(parquet_file_key)
+    for ticker in tickers:
+        format_news_data(ticker)
     print("Done formatting news data.")
-    return parquet_file_keys
 
 
-def format_all_prices(keys):
+def format_all_prices(tickers):
     """
     This function formats all stock prices data using the function 'format_prices_data'.
 
     Args:
-        keys (list): List of keys of the files stored in S3 containing the stock prices data.
-
-    Returns:
-        list: List of keys of the files stored in S3 containing the transformed stock prices data in Parquet format.
+        tickers (list): List of tickers for which to format stock prices data.
     """
-    parquet_file_keys = []
     print("Formatting prices data...")
-    for key in keys:
-        parquet_file_key = format_prices_data(key)
-        parquet_file_keys.append(parquet_file_key)
+    for ticker in tickers:
+        format_prices_data(ticker)
     print("Done formatting prices data.")
-    return parquet_file_keys
