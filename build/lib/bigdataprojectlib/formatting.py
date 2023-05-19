@@ -1,12 +1,16 @@
+# formatting.py
+# The second step of the pipeline
+
+# Importing necessary libraries
 import findspark
 
-findspark.init()
+findspark.init()  # Initializing Spark
 
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
+from pyspark.sql import functions as Func
 
-
-spark = (
+# Creating a SparkSession
+spark_session = (
     SparkSession.builder.master("local[*]")
     .config("spark.driver.host", "127.0.0.1")
     .config(
@@ -18,23 +22,34 @@ spark = (
     .config("spark.hadoop.fs.s3a.access.key", "test")
     .config("spark.hadoop.fs.s3a.secret.key", "test")
     .config("spark.hadoop.fs.s3a.path.style.access", True)
-    .appName("spark_localstack_news_data")
+    .appName("spark_localstack_formatting")
     .getOrCreate()
 )
 
 
-def news_formatter(key):
+def format_news_data(key):
+    """
+    This function takes a key of a JSON file stored in S3 bucket, loads the file into a Spark DataFrame,
+    transforms the DataFrame and finally writes it back to S3 as a Parquet file.
+
+    Args:
+        key (str): The key of the file stored in S3 containing the news data.
+
+    Returns:
+        str: The key of the file stored in S3 containing the transformed news data in Parquet format.
+        Prints an error message if an exception is encountered.
+    """
     print(f"Formatting {key}")
     try:
-        # Read the JSON file directly into a DataFrame
-        df = spark.read.json(f"s3a://big-data-project-ingestion/{key}")
+        # Read JSON data into DataFrame
+        data_frame = spark_session.read.json(f"s3a://big-data-project-ingestion/{key}")
 
-        # Extract the ticker from the file name
-        ticker = key.split("_")[0]  # Assuming the ticker is the first part of the file name
+        # Extract ticker from key
+        ticker = key.split("_")[0]
 
-        # Flatten the DataFrame and filter for the desired ticker
-        df = (
-            df.selectExpr("explode(feed) as feed")
+        # Transform DataFrame
+        data_frame = (
+            data_frame.selectExpr("explode(feed) as feed")
             .selectExpr(
                 "feed.time_published",
                 "explode(feed.ticker_sentiment) as ticker_sentiment",
@@ -53,91 +68,122 @@ def news_formatter(key):
             .filter(f"ticker = '{ticker}'")
         )
 
-        # Convert the time_published field to a proper timestamp
-        df = df.withColumn(
-            "time_published",
-            F.from_utc_timestamp(F.col("time_published"), "UTC")
+        # Convert "time_published" to timestamp format
+        data_frame = data_frame.withColumn(
+            "time_published", Func.from_utc_timestamp(Func.col("time_published"), "UTC")
         )
 
-        # Show the DataFrame
-        df.show()
+        # Show DataFrame
+        data_frame.show()
 
-        # Save the DataFrame as a Parquet file
-        parquet_key = f'{key.rsplit(".", 1)[0]}.parquet'  # Remove the .json extension
-        df.write.parquet(f"s3a://big-data-project-formatting/{parquet_key}")
+        # Write DataFrame to Parquet format and save in S3
+        parquet_file_key = f'{key.rsplit(".", 1)[0]}.parquet'
+        data_frame.write.parquet(
+            f"s3a://big-data-project-formatting/{parquet_file_key}"
+        )
 
-        # Return the parquet key
-        return parquet_key
+        return parquet_file_key
 
-    except Exception as e:
-        print("Error: ", e)
+    except Exception as error:
+        print("Error: ", error)
         print("key: ", key)
 
 
-def prices_formatter(key):
+def format_prices_data(key):
+    """
+    This function takes a key of a JSON file stored in S3 bucket, loads the file into a Spark DataFrame,
+    transforms the DataFrame and finally writes it back to S3 as a Parquet file.
+
+    Args:
+        key (str): The key of the file stored in S3 containing the stock prices data.
+
+    Returns:
+        str: The key of the file stored in S3 containing the transformed stock prices data in Parquet format.
+        Prints an error message if an exception is encountered.
+    """
     print(f"Formatting {key}")
     try:
-        # Read the JSON file directly into a DataFrame
-        df = spark.read.json(f"s3a://big-data-project-ingestion/{key}")
+        # Read JSON data into DataFrame
+        data_frame = spark_session.read.json(f"s3a://big-data-project-ingestion/{key}")
 
-        # Get the symbol
-        symbol = df.select(df["Meta Data"]["2. Symbol"]).first()[0]
+        # Extract symbol from DataFrame
+        symbol = data_frame.select(data_frame["Meta Data"]["2. Symbol"]).first()[0]
 
-        # Get the struct as an RDD
-        rdd = df.select("`Time Series (Daily)`").rdd.flatMap(lambda x: x)
+        # Transform DataFrame
+        rdd = data_frame.select("`Time Series (Daily)`").rdd.flatMap(lambda x: x)
 
-        # Process the RDD to convert the struct to a format we can work with
         rdd = rdd.flatMap(lambda x: [(symbol, k, v) for k, v in x.asDict().items()])
 
-        # Convert the RDD back to a DataFrame
-        df = rdd.toDF(["symbol", "date", "values"])
+        data_frame = rdd.toDF(["symbol", "date", "values"])
 
-        # Expand the "values" column into separate columns
-        df = df.select(
-            F.col("symbol"),
-            F.from_utc_timestamp(F.col("date"), "UTC").alias("date"),
-            df["values"]["1. open"].cast("double").alias("open"),
-            df["values"]["2. high"].cast("double").alias("high"),
-            df["values"]["3. low"].cast("double").alias("low"),
-            df["values"]["4. close"].cast("double").alias("close"),
-            df["values"]["5. adjusted close"].cast("double").alias("adjusted_close"),
-            df["values"]["6. volume"].cast("double").alias("volume"),
-            df["values"]["7. dividend amount"].cast("double").alias("dividend_amount"),
-            df["values"]["8. split coefficient"]
+        data_frame = data_frame.select(
+            Func.col("symbol"),
+            Func.from_utc_timestamp(Func.col("date"), "UTC").alias("date"),
+            data_frame["values"]["1. open"].cast("double").alias("open"),
+            data_frame["values"]["2. high"].cast("double").alias("high"),
+            data_frame["values"]["3. low"].cast("double").alias("low"),
+            data_frame["values"]["4. close"].cast("double").alias("close"),
+            data_frame["values"]["5. adjusted close"]
+            .cast("double")
+            .alias("adjusted_close"),
+            data_frame["values"]["6. volume"].cast("double").alias("volume"),
+            data_frame["values"]["7. dividend amount"]
+            .cast("double")
+            .alias("dividend_amount"),
+            data_frame["values"]["8. split coefficient"]
             .cast("double")
             .alias("split_coefficient"),
         )
 
-        # Show the DataFrame
-        df.show()
+        # Show DataFrame
+        data_frame.show()
 
-        # Save the DataFrame as a Parquet file
-        parquet_key = f'{key.rsplit(".", 1)[0]}.parquet'  # Remove the .json extension
-        df.write.parquet(f"s3a://big-data-project-formatting/{parquet_key}")
+        # Write DataFrame to Parquet format and save in S3
+        parquet_file_key = f'{key.rsplit(".", 1)[0]}.parquet'
+        data_frame.write.parquet(
+            f"s3a://big-data-project-formatting/{parquet_file_key}"
+        )
 
-        # Return the parquet key
-        return parquet_key
+        return parquet_file_key
 
-    except Exception as e:
-        print("Error: ", e)
+    except Exception as error:
+        print("Error: ", error)
         print("key: ", key)
 
 
-def format_news(keys):
-    parquet_keys = []
+def format_all_news(keys):
+    """
+    This function formats all news data using the function 'format_news_data'.
+
+    Args:
+        keys (list): List of keys of the files stored in S3 containing the news data.
+
+    Returns:
+        list: List of keys of the files stored in S3 containing the transformed news data in Parquet format.
+    """
+    parquet_file_keys = []
     print("Formatting news data...")
     for key in keys:
-        parquet_key = news_formatter(key)
-        parquet_keys.append(parquet_key)
+        parquet_file_key = format_news_data(key)
+        parquet_file_keys.append(parquet_file_key)
     print("Done formatting news data.")
-    return parquet_keys
+    return parquet_file_keys
 
 
-def format_prices(keys):
-    parquet_keys = []
+def format_all_prices(keys):
+    """
+    This function formats all stock prices data using the function 'format_prices_data'.
+
+    Args:
+        keys (list): List of keys of the files stored in S3 containing the stock prices data.
+
+    Returns:
+        list: List of keys of the files stored in S3 containing the transformed stock prices data in Parquet format.
+    """
+    parquet_file_keys = []
     print("Formatting prices data...")
     for key in keys:
-        parquet_key = prices_formatter(key)
-        parquet_keys.append(parquet_key)
+        parquet_file_key = format_prices_data(key)
+        parquet_file_keys.append(parquet_file_key)
     print("Done formatting prices data.")
-    return parquet_keys
+    return parquet_file_keys

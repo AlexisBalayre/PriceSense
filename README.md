@@ -73,4 +73,10 @@ This project aims to fetch stock market data, transform it using PySpark, and sa
     └──────────────────────────┴─────────────┘
     ```
 
-7. Create an S3 bucket using the following command: `aws --endpoint-url=http://localhost:4566 s3 mb s3://big-data-project`
+7. Create the S3 buckets using the following commands:
+
+    ```shell
+    aws --endpoint-url=http://localhost:4566 s3 mb s3://big-data-project-ingestion
+    aws --endpoint-url=http://localhost:4566 s3 mb s3://big-data-project-formatting
+    aws --endpoint-url=http://localhost:4566 s3 mb s3://big-data-project-combination
+    ```
