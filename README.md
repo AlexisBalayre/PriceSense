@@ -10,8 +10,7 @@ This project aims to fetch stock market data, transform it using PySpark, and sa
 2. Create a virtual environment and activate it: `python3 -m venv venv && source venv/bin/activate`
 3. Install the required packages using the following command: `pip install -r requirements.txt`
 4. Build the Python package using the following command: `python setup.py bdist_wheel`
-5. Your wheel file is stored in the “dist” folder that is now created. You can install your library by using: 
-    `pip install /path/to/wheelfile.whl`
+5. Your wheel file is stored in the “dist” folder that is now created. You can now install the "bigdataprojectlib" library by using: `pip install /path/to/wheelfile.whl`
 6. Download the AWS JARs into PySpark's JAR directory:
 
     ```shell
