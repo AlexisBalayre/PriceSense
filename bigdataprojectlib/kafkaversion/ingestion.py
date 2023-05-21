@@ -115,6 +115,21 @@ def ingest_stock_prices_to_kafka(ticker):
         print(f"Stock prices for {ticker} ingested successfully!")
 
 
+"""
+Here is the good way to do. However due to the limited 
+number of Alphavantage API calls with a free API key, 
+we will hardcode here the values of the 2 api calls 
+using the values present in the json files of the 'test' folder. 
+
+tickers = ["AAPL", "GOOG"]
+limit = 200
+for ticker in tickers:
+    ingest_news_to_kafka(ticker, 200)
+    ingest_stock_prices_to_kafka(ticker)
+    time.sleep(4)  # Delay before ingesting next data
+"""
+
+
 # Loading data from JSON files and ingesting to Kafka
 aapl_prices_json = {}
 goog_prices_json = {}

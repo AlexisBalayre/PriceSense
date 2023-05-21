@@ -72,7 +72,11 @@ def format_news_data(key):
 
         # Convert "time_published" to UTC timestamp format
         data_frame = data_frame.withColumn(
-            "time_published", Func.to_utc_timestamp(Func.to_timestamp(Func.col("time_published"), "yyyyMMdd'T'HHmmss"), "UTC")
+            "time_published",
+            Func.to_utc_timestamp(
+                Func.to_timestamp(Func.col("time_published"), "yyyyMMdd'T'HHmmss"),
+                "UTC",
+            ),
         )
 
         # Show DataFrame

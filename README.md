@@ -82,3 +82,10 @@ This project aims to fetch stock market data, transform it using PySpark, and sa
     aws --endpoint-url=http://localhost:4566 s3 mb s3://big-data-project-formatting
     aws --endpoint-url=http://localhost:4566 s3 mb s3://big-data-project-combination
     ```
+
+10. Create the .env file using the following command: `cp .env.example .env`
+
+    ```shell
+    docker exec -it 33b5a195951e kafka-topics --create --topic combine_data_topic --bootstrap-server localhost:9092
+    ```
+

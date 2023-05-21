@@ -90,6 +90,7 @@ def index_data_into_elasticsearch(data_json):
     print(f"Data indexed successfully!")
 
 
+# Here we subscribe our consumer to the 'combine_data_topic' topic.
 consumer.subscribe(["combine_data_topic"])
 
 # Consume messages
