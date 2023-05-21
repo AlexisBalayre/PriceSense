@@ -1,4 +1,4 @@
-# Big Data Project
+# PriceSense: Correlating News Sentiment with Stock Prices
 
 ## Description
 
