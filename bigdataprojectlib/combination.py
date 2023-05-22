@@ -195,6 +195,20 @@ def combine_news_and_prices(news_key, prices_key):
             )
         )
 
+        # If the combined DataFrame is empty, add only the news data
+        if combined_data_frame.count() == 0:
+            combined_data_frame = news_data_frame.select(
+                Func.col("date"),
+                Func.lit(0).alias("close_price"),
+                Func.lit(0).alias("close_price_prediction"),
+                "positive_news_amount",
+                "negative_news_amount",
+                "ticker_sentiment_score_mean",
+                "ticker_sentiment_score_mean_label",
+                "overall_sentiment_score_mean",
+                "overall_sentiment_score_mean_label",
+            )
+        
         # Get the symbol from the key
         symbol = news_key.split("_")[0]
 
