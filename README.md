@@ -8,13 +8,13 @@ This project explores the correlation between financial news sentiment and stock
 
 ### Version 1: S3 Pipeline (emulated with LocalStack)
 
-1. **Ingestion Phase**: The `bigdataprojectlib/ingestion.py` scripts fetch financial news and stock prices data respectively. The fetched data is stored in emulated S3 buckets (provided by LocalStack) for the next phase.
+1. **Ingestion Phase**: The `bigdataprojectlib/ingestion.py` scripts fetch financial news and stock prices data respectively. The fetched data is stored in JSON format in emulated S3 buckets (provided by LocalStack) for the next phase.
 
-2. **Formatting Phase**: The `bigdataprojectlib/formatting.py` scripts extract the raw data from the S3 buckets, format it into a suitable JSON format, and store it back into another set of S3 buckets for the combination phase.
+2. **Formatting Phase**: The `bigdataprojectlib/formatting.py` scripts extract the raw data from the S3 buckets, format it into a suitable parquet format, and store it back into another set of S3 buckets for the combination phase.
 
 3. **Combination Phase**: The `bigdataprojectlib/combination.py` script fetches the formatted news sentiment data and stock prices data from S3, combines them for each ticker symbol, and stores the combined data into an S3 bucket for the indexing phase.
 
-4. **Indexing Phase**: The `bigdataprojectlib/indexing.py` script fetches the combined data from the S3 bucket, converts the JSON data into a Spark DataFrame, and indexes this data into Elasticsearch.
+4. **Indexing Phase**: The `bigdataprojectlib/indexing.py` script fetches the combined data from the S3 bucket, converts the parquet data into a Spark DataFrame, and indexes this data into Elasticsearch.
 
 ### Version 2: Kafka Pipeline
 
