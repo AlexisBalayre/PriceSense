@@ -29,6 +29,7 @@ spark_session = (
     .config("spark.hadoop.fs.s3a.access.key", "test")
     .config("spark.hadoop.fs.s3a.secret.key", "test")
     .config("spark.hadoop.fs.s3a.path.style.access", True)
+    .config("spark.sql.session.timeZone", "UTC")
     .appName("spark_localstack_news_data")
     .getOrCreate()
 )
@@ -217,7 +218,7 @@ def combine_news_and_prices(news_key, prices_key):
 
         # Convert the date to the current date with the correct format UTC
         combined_data_frame = combined_data_frame.withColumn(
-            "timestamp", Func.to_utc_timestamp(Func.current_timestamp(), "UTC")
+            "timestamp", Func.unix_timestamp(Func.current_timestamp())*1000
         )
 
         # Fetch the current price
