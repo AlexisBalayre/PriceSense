@@ -124,8 +124,10 @@ Follow these steps to get the project running on your local machine:
 
 You can now explore the processed and combined data in Elasticsearch, and visualize it using Kibana!
 
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
 ## License
 
-This project is licensed under the MIT License.
-
-Happy data crunching!
+[MIT](https://choosealicense.com/licenses/mit/)
