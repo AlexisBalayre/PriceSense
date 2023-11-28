@@ -5,6 +5,7 @@
 This project explores the correlation between financial news sentiment and stock prices. It employs two versions of a data pipeline: one leveraging LocalStack to emulate Amazon S3 for temporary data storage and message passing, and another using Apache Kafka for real-time data streaming and message passing. Both pipelines process raw financial news and stock prices, compute sentiment scores, combine the processed data, and index it into Elasticsearch for further analysis and visualization.
 
 ## Pipeline Overview
+<img width="1353" alt="pipeline_v1" src="https://github.com/AlexisBalayre/PriceSense/assets/60859013/9da41f1f-5187-4d9d-ae39-0cb2b0598220">
 
 ### Version 1: S3 Pipeline (emulated with LocalStack)
 
@@ -17,6 +18,7 @@ This project explores the correlation between financial news sentiment and stock
 4. **Indexing Phase**: The `bigdataprojectlib/indexing.py` script fetches the combined data from the S3 bucket, converts the parquet data into a Spark DataFrame, and indexes this data into Elasticsearch.
 
 ### Version 2: Kafka Pipeline
+<img width="1206" alt="pipeline_v2" src="https://github.com/AlexisBalayre/PriceSense/assets/60859013/3de6f10b-795f-4e92-bdf8-b2a7135b1e72">
 
 1. **Ingestion Phase**: The `bigdataprojectlib/kafkaversion/ingestion.py` scripts are used to fetch financial news and stock prices data respectively. The fetched data is published to Kafka topics to signal data availability.
 
