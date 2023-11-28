@@ -4,6 +4,9 @@
 
 This project explores the correlation between financial news sentiment and stock prices. It employs two versions of a data pipeline: one leveraging LocalStack to emulate Amazon S3 for temporary data storage and message passing, and another using Apache Kafka for real-time data streaming and message passing. Both pipelines process raw financial news and stock prices, compute sentiment scores, combine the processed data, and index it into Elasticsearch for further analysis and visualization.
 
+<img width="1213" alt="kibana_dashboard_1" src="https://github.com/AlexisBalayre/PriceSense/assets/60859013/0aaa2ea5-d5b7-4076-818b-56cef7af55c0">
+<img width="1212" alt="kibana_dashboard_2" src="https://github.com/AlexisBalayre/PriceSense/assets/60859013/f6107f5b-149c-4da9-b227-a3481a8a7767">
+
 ## Pipeline Overview
 <img width="1353" alt="pipeline_v1" src="https://github.com/AlexisBalayre/PriceSense/assets/60859013/9da41f1f-5187-4d9d-ae39-0cb2b0598220">
 
