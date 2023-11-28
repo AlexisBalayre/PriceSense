@@ -268,7 +268,7 @@ def combine_news_and_prices(news_json, prices_json):
         combined_data_frame.show()
 
         producer.produce(
-            "combine_data_topic",
+            " ",
             json.dumps(combined_data_frame.toJSON().collect()),
         )
 

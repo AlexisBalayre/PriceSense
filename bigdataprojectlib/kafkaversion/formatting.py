@@ -209,8 +209,6 @@ def format_prices_data(json_data):
         # Show DataFrame
         data_frame.show()
 
-        print(data_frame.toJSON().collect())
-
         # Convert DataFrame to JSON and send it to Kafka
         producer.produce(
             "format_prices_topic",
